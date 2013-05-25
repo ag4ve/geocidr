@@ -23,31 +23,70 @@ use warnings;
 
 $SIG{INT} = 'current_ip';
 
-use Net::CIDR qw(cidr2range cidrlookup);
+use Getopt::Long;
+use Pod::Usage;
+
+use Net::IP;
+use Net::CIDR qw(cidrlookup);
 use Net::DNS::Resolver;
 use Net::DNS::Packet;
 
-my ($start, $end) = ip_range($ARGV[0]);
-
-my $last = next_ip($end);
-my $ip = $start;
-
-while (cidrlookup($ip, $ARGV[0]))
+my $opts;
+GetOptions('ip=s@'      => \$opts->{ip},
+          'mask|d=s'     => \$opts->{mask},
+        ) or pod2usage( -verbose => 0, -output => \*STDERR, 
+          -msg => "$0 no parameter found.\n" .
+                  "Use -help for more options.\n"
+        );
+if ($opts->{man})
 {
-  my @octets = split_ip($ip);
-  my ($asn, $cidr, $country, $nic, $date) = asn_map(@octets);
+  pod2usage( -verbose => 2 ); 
+}
+elsif ($opts->{help} or grep { ! m%[0-9\.\/]+% } @{$opts->{ip}})
+{
+  pod2usage( -verbose => 0, -output => \*STDERR,
+              -msg => "$0 [options]\n");
+}
 
-  if ($asn and $cidr and $country and $nic and $date)
+$opts->{mask} //= 32;
+
+# Currently processed ip should be global for reporting
+my $ip = Net::IP->new('0.0.0.0/0') or die (Net::IP::Error());
+my $one = Net::IP->new('0.0.0.1');
+
+for my $i (@{$opts->{ip}})
+{
+  per_ip($i);
+}
+
+sub per_ip
+{
+  my ($ip_str) = @_;
+
+  print "IP: $ip_str\n";
+  $ip->set($ip_str) or die (Net::IP::Error());
+
+  while (cidrlookup($ip->ip, $ip_str))
   {
-    print "[$cidr] [$country]\n";
+    my @octets = split_ip($ip->ip);
+    my ($asn, $cidr, $country, $nic, $date) = asn_map(@octets);
+  
+    if ($asn and $cidr and $country and $nic and $date)
+    {
+      print " * [$cidr] [$country]\n";
+      my ($addr, $mask) = split("/", $cidr);
+      $mask = (($mask < $opts->{mask}) ? $mask : $opts->{mask});
+      $ip->set($addr . "/" . $mask) or die (Net::IP::Error());
+      $ip->set($ip->last_ip) or die (NET::IP::Error());
+    }
+    else
+    {
+      print " * " . $ip->ip . "/" . $ip->prefixlen . " NONE\n";
+      $ip->set($ip->ip . "/" . $ip->{mask});
+      $ip->set($ip->last_ip) or die (Net::IP::Error());
+    }
 
-    my ($sip, $eip) = ip_range($cidr);
-
-    $ip = next_ip($eip);
-  }
-  else
-  {
-    $ip = next_ip($ip);
+    $ip = $ip->binadd($one);
   }
 }
 
@@ -65,16 +104,6 @@ sub asn_map
   return split(/ \| /, $rec);
 }
 
-sub ip_range
-{
-  my ($ip_str) = @_;
-
-  my $range = join("", cidr2range($ip_str));
-  my ($sip, $eip) = split("-", $range);
-
-  return $sip, $eip;
-}
-
 sub split_ip
 {
   my ($ip_str) = @_;
@@ -82,32 +111,9 @@ sub split_ip
   return @octets;
 }
 
-sub next_ip
-{
-  my ($ip_str) = @_;
-
-  my @blocks = split_ip($ip_str);
-
-  my $shifted = 0;
-  foreach my $i (reverse(0 .. $#blocks))
-  {
-    if ($blocks[$i] == 255)
-    {
-      last if ($i == 0);
-      $blocks[$i] = 0;
-      $blocks[$i -1]++;
-      $shifted = 1;
-    }
-  }
-
-  $blocks[3]++ unless ($shifted);
-
-  return join(".", @blocks);
-}
-
 sub current_ip
 {
-  print STDERR "IP [$ip]\n";
+  print STDERR "IP [" . $ip->ip . "]\n";
   exit;
 }
 
