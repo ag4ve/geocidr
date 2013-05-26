@@ -70,22 +70,24 @@ sub per_ip
   {
     my @octets = split_ip($ip->ip);
     my ($asn, $cidr, $country, $nic, $date) = asn_map(@octets);
+    my $mask = $opts->{mask};
+    my $addr = "0.0.0.0";
   
     if ($asn and $cidr and $country and $nic and $date)
     {
       print " * [$cidr] [$country]\n";
-      my ($addr, $mask) = split("/", $cidr);
-      $mask = (($mask < $opts->{mask}) ? $mask : $opts->{mask});
-      $ip->set($addr . "/" . $mask) or die (Net::IP::Error());
-      $ip->set($ip->last_ip) or die (NET::IP::Error());
+      my $curmask;
+      ($addr, $curmask) = split("/", $cidr);
+      $mask = (($curmask > $mask) ? $mask : $curmask);
     }
     else
     {
-      print " * " . $ip->ip . "/" . $ip->prefixlen . " NONE\n";
-      $ip->set($ip->ip . "/" . $ip->{mask});
-      $ip->set($ip->last_ip) or die (Net::IP::Error());
+      print " * " . $ip->ip . "/$mask NONE\n";
+      $addr = $ip->ip;
     }
 
+    $ip->set($addr . "/" . $mask) or die (Net::IP::Error());
+    $ip->set($ip->last_ip) or die (NET::IP::Error());
     $ip = $ip->binadd($one);
   }
 }
