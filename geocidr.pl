@@ -33,7 +33,8 @@ use Net::DNS::Packet;
 
 my $opts;
 GetOptions('ip=s@'      => \$opts->{ip},
-          'mask|d=s'     => \$opts->{mask},
+          'mask|d=s'    => \$opts->{mask},
+          'indent|i'    => \$opts->{indent},
         ) or pod2usage( -verbose => 0, -output => \*STDERR, 
           -msg => "$0 no parameter found.\n" .
                   "Use -help for more options.\n"
@@ -75,14 +76,14 @@ sub per_ip
   
     if ($asn and $cidr and $country and $nic and $date)
     {
-      print " * [$cidr] [$country]\n";
       my $curmask;
       ($addr, $curmask) = split("/", $cidr);
       $mask = (($curmask > $mask) ? $mask : $curmask);
+      print " * " . net_space($curmask) . "[$cidr] [$country]\n";
     }
     else
     {
-      print " * " . $ip->ip . "/$mask NONE\n";
+      print " * " . net_space($mask) . "[" . $ip->ip . "/$mask] [NONE]\n";
       $addr = $ip->ip;
     }
 
@@ -119,4 +120,10 @@ sub current_ip
   exit;
 }
 
+sub net_space
+{
+  my ($mask) = @_;
+
+  return ($opts->{indent} ? " " x $mask : "");
+}
 
