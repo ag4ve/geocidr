@@ -65,6 +65,8 @@ sub per_ip
   my ($ip_str) = @_;
 
   print "IP: $ip_str\n";
+  $ip_str .= "/32" unless ($ip_str =~ m%/[0-9]{1,2}%);
+  print "ip_str [$ip_str]\n";
   $ip->set($ip_str) or die (Net::IP::Error());
 
   while (cidrlookup($ip->ip, $ip_str))
