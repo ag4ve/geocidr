@@ -1,9 +1,9 @@
 #!/usr/bin/env perl 
 #===============================================================================
 #
-#         FILE:  geocidr.pl
+#         FILE:  geocidr
 #
-#        USAGE:  ./geocidr.pl  
+#        USAGE:  ./geocidr [options]
 #
 #  DESCRIPTION:  
 #
