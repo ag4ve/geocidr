@@ -1,5 +1,6 @@
 temp.sh
 *.conf
+*.bak
 MYMETA.*
 Makefile
 blib
