@@ -35,6 +35,15 @@ my $opts;
 GetOptions('ip=s@'      => \$opts->{ip},
           'mask|d=s'    => \$opts->{mask},
           'indent|i'    => \$opts->{indent},
+          'header|h'    => \$opts->{header},
+          'asn|a'       => \$opts->{asn},
+          'address'     => \$opts->{address},
+          'country|c'   => \$opts->{country},
+          'nic|n'       => \$opts->{nic},
+          'date|d'      => \$opts->{date},
+          'empty|e'     => \$opts->{empty},
+          'help'        => \$opts->{help},
+          'man|m'       => \$opts->{man},
         ) or pod2usage( -verbose => 0, -output => \*STDERR, 
           -msg => "$0 no parameter found.\n" .
                   "Use -help for more options.\n"
@@ -64,7 +73,7 @@ sub per_ip
 {
   my ($ip_str) = @_;
 
-  print "IP: $ip_str\n";
+  print "IP: $ip_str\n" unless ($opts->{header});
   $ip_str .= "/32" unless ($ip_str =~ m%/[0-9]{1,2}%);
   $ip->set($ip_str) or die (Net::IP::Error());
 
@@ -80,11 +89,17 @@ sub per_ip
       my $curmask;
       ($addr, $curmask) = split("/", $cidr);
       $mask = (($curmask > $mask) ? $mask : $curmask);
-      print " * " . net_space($curmask) . "[$cidr] [$country]\n";
+      print " * " . net_space($curmask) .
+            ($opts->{asn} ?"[$asn] " : "") .
+            ($opts->{address} ? "" : "[$cidr] ") .
+            ($opts->{country} ? "" : "[$country] ") .
+            ($opts->{nic} ? "[$nic] " : "") .
+            ($opts->{date} ? "[$date]" : "") .
+            "\n";
     }
     else
     {
-      print " * " . net_space($mask) . "[" . $ip->ip . "/$mask] [NONE]\n";
+      print " * " . net_space($mask) . "[" . $ip->ip . "/$mask] [NONE]\n" unless ($opts->{empty});
       $addr = $ip->ip;
     }
 
@@ -104,6 +119,7 @@ sub asn_map
   my $response = $resolver->send($packet);
 
   my $rec = join ', ', map { $_->rdatastr } grep { $_->type eq 'TXT' } $response->answer;
+  $rec =~ s/"//g;
 
   return split(/ \| /, $rec);
 }
