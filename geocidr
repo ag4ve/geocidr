@@ -52,7 +52,7 @@ if ($opts->{man})
 {
   pod2usage( -verbose => 2 ); 
 }
-elsif ($opts->{help} or (ref $opts->{ip} eq 'ARRAY' and scalar(@{$opts->{ip}}) < 1))
+elsif ($opts->{help} or !defined($opts->{ip}) or (ref $opts->{ip} eq 'ARRAY' and scalar(@{$opts->{ip}}) < 1))
 {
   pod2usage( -verbose => 0, -output => \*STDERR,
               -msg => "$0 [options]\n");
