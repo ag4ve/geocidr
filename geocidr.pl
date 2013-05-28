@@ -43,7 +43,7 @@ if ($opts->{man})
 {
   pod2usage( -verbose => 2 ); 
 }
-elsif ($opts->{help} or grep { ! m%[0-9\.\/]+% } @{$opts->{ip}} or scalar(@{$opts->{ip}}) < 1)
+elsif ($opts->{help} or scalar(@{$opts->{ip}}) < 1)
 {
   pod2usage( -verbose => 0, -output => \*STDERR,
               -msg => "$0 [options]\n");
