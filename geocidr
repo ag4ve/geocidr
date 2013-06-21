@@ -144,3 +144,56 @@ sub net_space
   return ($opts->{indent} ? " " x $mask : "");
 }
 
+=head1 DESCRIPTION
+
+Look through log data with start/end time, query, and log parts to display. Most options can be included multiple times to add more items (specified as 'multiple').
+
+=head1 SYNOPSIS
+
+=over 14
+
+=item B<--ip>
+
+CIDR address (defaults to a mask of /32)
+
+=item B<-d, --mask>
+
+Depth of mask to scan. Ie, if a mask of 24 and an address of 192.168.1.0/25 is returned, the next address that will be looked up is 192.168.2.0 and not 192.168.1.128.
+
+=item B<-i, --indent>
+
+Visually display spaces before the address depending on the size of the subnet (more space for a larger CIDR number / smaller address space).
+
+=item B<-a, --asn>
+
+Display the ASN (Autonomous System Number) for each address (default: 0 not displayed).
+
+=item B<--address>
+
+Display the IP address / subnet (default: 0 to display).
+
+=item B<--country>
+
+Display the country associated with the address (default: 0 to display).
+
+=item B<-n, --nic>
+
+Display the reagional internet registror who maintains the address.
+
+=item B<-d, --date>
+
+Display the date the address was registered.
+
+=item B<-e, --empty>
+
+Display addresses that are not registered to a name space (default: 0 to display)
+
+=item B<--help>
+
+Display this help message
+
+=item B<--man>
+
+Display in man pager
+
+
